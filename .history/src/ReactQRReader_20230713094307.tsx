@@ -5,22 +5,18 @@ interface QRCodeScannerProps {}
 
 const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [imageSrc, setImageSrc] = useState<any>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [qrCodeData, setQRCodeData] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    console.log('handleImageUpload: ');
     const file = event.target.files?.[0];
     if (file) {
-      setImageSrc(URL.createObjectURL(file))
-      // const reader = new FileReader();
-      // console.log('reader: ', reader);
-      // reader.onload = () => {
-      //   setImageSrc(reader.result as string);
-      //   setQRCodeData(null);
-      // };
-      // reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result as string);
+        setQRCodeData(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -36,13 +32,12 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
     image.onload = () => {
       const { width, height } = image;
-
       canvas.width = width;
       canvas.height = height;
+      console.log('canvas: ', canvas);
       ctx.drawImage(image, 0, 0);
 
       const imageData = ctx.getImageData(0, 0, width, height).data;
-      console.log('imageData: ', imageData, width, height);
       const code: QRCode | null = jsQR(imageData, width, height);
       console.log('code: ', code);
 
@@ -53,7 +48,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
         const bottomLeft = { x: bottomLeftCorner.x, y: bottomLeftCorner.y };
         const bottomRight = { x: bottomRightCorner.x, y: bottomRightCorner.y };
 
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = 'red';
 
         // Vẽ khung vuông xung quanh khu vực QR code
@@ -66,21 +61,19 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
         ctx.stroke();
 
         setQRCodeData(code.data);
-      }else {
-        setResult('Không tìm thấy mã QR code trong hình ảnh.')
-        console.log('Không tìm thấy mã QR code trong hình ảnh.');
+      }else{
+        console.log("Không tìm thấy mã qr code");
       }
     };
   }, [imageSrc]);
 
   return (
     <div>
-      {result}
       <input type="file" accept="image/*" onChange={handleImageUpload} />
-      {imageSrc && (
+      {qrCodeData && (
         <div>
+          <p>Mã QR code đã được phát hiện: {qrCodeData}</p>
           <canvas ref={canvasRef}></canvas>
-          {qrCodeData && <p>Mã QR code đã được phát hiện: {qrCodeData}</p>}
         </div>
       )}
     </div>

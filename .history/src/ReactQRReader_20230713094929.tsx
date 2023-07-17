@@ -5,22 +5,19 @@ interface QRCodeScannerProps {}
 
 const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [imageSrc, setImageSrc] = useState<any>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [qrCodeData, setQRCodeData] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
     console.log('handleImageUpload: ');
     const file = event.target.files?.[0];
     if (file) {
-      setImageSrc(URL.createObjectURL(file))
-      // const reader = new FileReader();
-      // console.log('reader: ', reader);
-      // reader.onload = () => {
-      //   setImageSrc(reader.result as string);
-      //   setQRCodeData(null);
-      // };
-      // reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result as string);
+        setQRCodeData(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -32,18 +29,30 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
     const image = new Image();
     image.src = imageSrc;
-    console.log('image: ', image);
 
     image.onload = () => {
       const { width, height } = image;
+      const MAX_SIZE = 800; // Kích thước tối đa mới
 
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(image, 0, 0);
+      // Tính toán kích thước mới cho hình ảnh
+      let newWidth = width;
+      let newHeight = height;
 
-      const imageData = ctx.getImageData(0, 0, width, height).data;
-      console.log('imageData: ', imageData, width, height);
-      const code: QRCode | null = jsQR(imageData, width, height);
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) {
+          newWidth = MAX_SIZE;
+          newHeight = (height / width) * MAX_SIZE;
+        } else {
+          newHeight = MAX_SIZE;
+          newWidth = (width / height) * MAX_SIZE;
+        }
+      }
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      ctx.drawImage(image, 0, 0, newWidth, newHeight);
+
+      const imageData = ctx.getImageData(0, 0, newWidth, newHeight).data;
+      const code: QRCode | null = jsQR(imageData, newWidth, newHeight);
       console.log('code: ', code);
 
       if (code) {
@@ -67,7 +76,6 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
         setQRCodeData(code.data);
       }else {
-        setResult('Không tìm thấy mã QR code trong hình ảnh.')
         console.log('Không tìm thấy mã QR code trong hình ảnh.');
       }
     };
@@ -75,7 +83,6 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
   return (
     <div>
-      {result}
       <input type="file" accept="image/*" onChange={handleImageUpload} />
       {imageSrc && (
         <div>

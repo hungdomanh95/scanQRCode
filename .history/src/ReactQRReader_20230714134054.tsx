@@ -13,7 +13,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
     console.log('handleImageUpload: ');
     const file = event.target.files?.[0];
     if (file) {
-      setImageSrc(URL.createObjectURL(file))
+      setImageSrc(file)
       // const reader = new FileReader();
       // console.log('reader: ', reader);
       // reader.onload = () => {
@@ -32,7 +32,6 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
     const image = new Image();
     image.src = imageSrc;
-    console.log('image: ', image);
 
     image.onload = () => {
       const { width, height } = image;

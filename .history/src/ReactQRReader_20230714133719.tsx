@@ -5,7 +5,7 @@ interface QRCodeScannerProps {}
 
 const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [imageSrc, setImageSrc] = useState<any>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [qrCodeData, setQRCodeData] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
 
@@ -13,14 +13,13 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
     console.log('handleImageUpload: ');
     const file = event.target.files?.[0];
     if (file) {
-      setImageSrc(URL.createObjectURL(file))
-      // const reader = new FileReader();
-      // console.log('reader: ', reader);
-      // reader.onload = () => {
-      //   setImageSrc(reader.result as string);
-      //   setQRCodeData(null);
-      // };
-      // reader.readAsDataURL(file);
+      const reader = new FileReader();
+      console.log('reader: ', reader);
+      reader.onload = () => {
+        setImageSrc(reader.result as string);
+        setQRCodeData(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -32,7 +31,6 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = () => {
 
     const image = new Image();
     image.src = imageSrc;
-    console.log('image: ', image);
 
     image.onload = () => {
       const { width, height } = image;
